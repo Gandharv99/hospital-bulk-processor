@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'adrf',
+    'drf_spectacular',
     # Local apps
     'bulk',
 ]
@@ -133,6 +134,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
         'rest_framework.parsers.JSONParser',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # ============================================
@@ -145,3 +147,10 @@ HOSPITAL_API_BASE_URL = config(
 HOSPITAL_API_TIMEOUT = config('HOSPITAL_API_TIMEOUT', default=30, cast=int)
 MAX_HOSPITALS_PER_BATCH = config('MAX_HOSPITALS_PER_BATCH', default=20, cast=int)
 MAX_CONCURRENT_REQUESTS = config('MAX_CONCURRENT_REQUESTS', default=10, cast=int)
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Hospital Bulk Processing API',
+    'DESCRIPTION': 'Bulk-create hospitals from CSV uploads via async processing.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
