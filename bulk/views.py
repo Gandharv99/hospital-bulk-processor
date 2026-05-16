@@ -3,11 +3,10 @@ import logging
 import time
 import uuid
 
-from asgiref.sync import async_to_sync
 from django.conf import settings
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
-from rest_framework.views import APIView
+from adrf.views import APIView
 from rest_framework import status as http_status
 from rest_framework.decorators import api_view
 
@@ -30,7 +29,7 @@ class HospitalBulkUploadView(APIView):
     """
     parser_classes = [MultiPartParser]
 
-    def post(self, request, *args, **kwargs):
+    async def post(self, request, *args, **kwargs):
         start_time = time.perf_counter()
         # 1. Get the uploaded file
         csv_file = request.FILES.get('file')
@@ -51,7 +50,7 @@ class HospitalBulkUploadView(APIView):
         logger.info("Processing bulk upload batch: %s with %d hospitals.", batch_id, len(hospitals_data))   
         # 4. Process the hospitals data asynchronously
         try:
-            results, batch_activated = async_to_sync(process_hospitals_bulk)(hospitals_data, batch_id)
+            results, batch_activated = await process_hospitals_bulk(hospitals_data, batch_id)
         except Exception as e:
             logger.exception("Error during bulk processing: %s", str(e))
             return Response(
