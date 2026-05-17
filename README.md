@@ -6,9 +6,12 @@ A Django-based bulk processing service that accepts CSV uploads of hospital reco
 
 **API Base URL:** `https://hospital-bulk-processor-rphl.onrender.com`
 
-**Endpoint:** `POST https://hospital-bulk-processor-rphl.onrender.com/api/hospitals/bulk`
+**Endpoints:**
+- `POST https://hospital-bulk-processor-rphl.onrender.com/api/hospitals/bulk` — Bulk create hospitals
+- `POST https://hospital-bulk-processor-rphl.onrender.com/api/hospitals/bulk/validate` — Validate CSV without processing
+- `GET https://hospital-bulk-processor-rphl.onrender.com/api/health` — Health check
 
-**Health Check:** `GET https://hospital-bulk-processor-rphl.onrender.com/api/health`
+**Interactive API Docs:** `https://hospital-bulk-processor-rphl.onrender.com/api/docs/`
 
 > Note: Hosted on Render free tier. First request after idle may take 30-60 seconds (cold start). Subsequent requests are fast.
 
@@ -155,6 +158,34 @@ Sunrise Care Center,789 Pine Road,
 { "error": "Too many rows. Maximum allowed is 20." }
 ```
 
+### `POST /api/hospitals/bulk/validate`
+
+Validates a CSV file without creating any hospitals. Useful for clients to verify their data format before triggering the actual bulk processing.
+
+**Request:**
+- Content-Type: `multipart/form-data`
+- Field: `file` (CSV file)
+
+**Validation Rules:** Same as `POST /api/hospitals/bulk` (file type, required columns, row limits, field constraints).
+
+**Success Response (200 OK):**
+```json
+{
+  "valid": true,
+  "message": "CSV is valid with 5 hospital entries."
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "valid": false,
+  "error": "Row 2: 'name' is required."
+}
+```
+
+This endpoint is a **dry-run** — no external API calls are made, no hospitals are created, no batch is generated. It only runs the same validation pipeline used by the bulk processing endpoint.
+
 ### `GET /api/health`
 
 Simple health check endpoint.
@@ -246,11 +277,17 @@ Open `http://127.0.0.1:8000/api/hospitals/bulk` in a browser. The DRF interface 
 
 ### Testing via Postman
 
+For dry-run validation (no hospitals created):
+1. Method: `POST`
+2. URL: `http://127.0.0.1:8000/api/hospitals/bulk/validate`
+3. Body → form-data → key `file` (type File) → choose CSV
+4. Send
+
+For actual bulk processing:
 1. Method: `POST`
 2. URL: `http://127.0.0.1:8000/api/hospitals/bulk`
-3. Body → form-data
-4. Add field: key `file`, type `File`, value: choose a CSV
-5. Send
+3. Body → form-data → key `file` (type File) → choose CSV
+4. Send
 
 ## Environment Variables
 

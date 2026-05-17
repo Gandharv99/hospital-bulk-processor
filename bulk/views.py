@@ -86,3 +86,28 @@ class HospitalBulkUploadView(APIView):
             status_code = http_status.HTTP_502_BAD_GATEWAY  # All failed
         
         return Response(response_data, status=status_code)
+
+class CSVValidationView(APIView):
+    """
+    POST endpoint to validate a CSV file without processing.
+    Useful for clients to check if their CSV is correctly formatted before actual upload.
+    """
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, *args, **kwargs):
+        csv_file = request.FILES.get('file')
+        if not csv_file:
+            return Response({"error": "No file uploaded. Please upload a CSV file under the 'file' field."}, 
+            status=http_status.HTTP_400_BAD_REQUEST)
+        try:
+            hospitals_data = validate_and_parse_csv(csv_file)
+            return Response({
+                "valid": True,
+                "message": f"CSV is valid with {len(hospitals_data)} hospital entries.",
+            }, status=http_status.HTTP_200_OK)
+        except CSVValidatorError as e:
+            logger.warning("CSV validation failed: %s", str(e))
+            return Response({"valid": False, "error": str(e)}, status=http_status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.warning("Unexpected error during CSV validation: %s", str(e))
+            return Response({"valid": False, "error": "An unexpected error occurred during CSV validation."}, status=http_status.HTTP_400_BAD_REQUEST)
